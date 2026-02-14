@@ -1,0 +1,143 @@
+import type { DefaultKeybinds } from "../types/keybinds";
+
+export const DEFAULT_KEYBINDS: DefaultKeybinds = {
+  "youtube.com": {
+    gh: {
+      description: "Go to YouTube home",
+      action: "navigate",
+      url: "https://www.youtube.com/",
+    },
+    gs: {
+      description: "Go to subscriptions",
+      action: "navigate",
+      url: "https://www.youtube.com/feed/subscriptions",
+    },
+    gl: {
+      description: "Go to library",
+      action: "navigate",
+      url: "https://www.youtube.com/feed/library",
+    },
+    gv1: {
+      description: "Go to 1st video in feed",
+      action: "click",
+      selector:
+        "ytd-rich-item-renderer:nth-of-type(1) a.yt-lockup-metadata-view-model__title",
+    },
+    gv2: {
+      description: "Go to 2nd video in feed",
+      action: "click",
+      selector:
+        "ytd-rich-item-renderer:nth-of-type(2) a.yt-lockup-metadata-view-model__title",
+    },
+    gv3: {
+      description: "Go to 3rd video in feed",
+      action: "click",
+      selector:
+        "ytd-rich-item-renderer:nth-of-type(3) a.yt-lockup-metadata-view-model__title",
+    },
+    gv4: {
+      description: "Go to 4th video in feed",
+      action: "click",
+      selector:
+        "ytd-rich-item-renderer:nth-of-type(4) a.yt-lockup-metadata-view-model__title",
+    },
+    gv5: {
+      description: "Go to 5th video in feed",
+      action: "click",
+      selector:
+        "ytd-rich-item-renderer:nth-of-type(5) a.yt-lockup-metadata-view-model__title",
+    },
+    gv6: {
+      description: "Go to 6th video in feed",
+      action: "click",
+      selector:
+        "ytd-rich-item-renderer:nth-of-type(6) a.yt-lockup-metadata-view-model__title",
+    },
+  },
+  "github.com": {
+    gh: {
+      description: "Go to GitHub home",
+      action: "navigate",
+      url: "https://github.com/",
+    },
+    gp: {
+      description: "Go to pull requests",
+      action: "navigate",
+      url: "https://github.com/pulls",
+    },
+    gi: {
+      description: "Go to issues",
+      action: "navigate",
+      url: "https://github.com/issues",
+    },
+    gn: {
+      description: "Go to notifications",
+      action: "navigate",
+      url: "https://github.com/notifications",
+    },
+    grpl: {
+      description: "Go to repo pull requests (context-aware)",
+      action: "conditional",
+      conditions: [
+        {
+          pathPattern: "^/[^/]+/[^/]+(/.*)?$",
+          action: "click",
+          selector:
+            "a[href$='/pulls'][data-turbo-frame='repo-content-turbo-frame']",
+        },
+        {
+          pathPattern: ".*",
+          action: "navigate",
+          url: "https://github.com/repos",
+        },
+      ],
+    },
+    gr2: {
+      description: "Go to 2nd repository in list",
+      action: "click",
+      selector:
+        "li.private:nth-child(2) a[class*='markdown-title'], li:nth-child(2) a[class*='markdown-title']",
+    },
+    grb: {
+      description: "Open branch selector",
+      action: "click",
+      selector:
+        "button[data-hotkey='w'][aria-label*='branch'], button#ref-picker-repos-header-ref-selector",
+    },
+    grp1: {
+      description: "Go to 1st PR in list",
+      action: "click",
+      selector:
+        ".js-issue-row:nth-child(1) a.js-navigation-open.markdown-title",
+    },
+    grp2: {
+      description: "Go to 2nd PR in list",
+      action: "click",
+      selector:
+        ".js-issue-row:nth-child(2) a.js-navigation-open.markdown-title",
+    },
+    grp3: {
+      description: "Go to 3rd PR in list",
+      action: "click",
+      selector:
+        ".js-issue-row:nth-child(3) a.js-navigation-open.markdown-title",
+    },
+    grp4: {
+      description: "Go to 4th PR in list",
+      action: "click",
+      selector:
+        ".js-issue-row:nth-child(4) a.js-navigation-open.markdown-title",
+    },
+    grp5: {
+      description: "Go to 5th PR in list",
+      action: "click",
+      selector:
+        ".js-issue-row:nth-child(5) a.js-navigation-open.markdown-title",
+    },
+    gss: {
+      description: "Focus on search bar",
+      action: "click",
+      selector: "input[name='q'], .header-search-input",
+    },
+  },
+};
