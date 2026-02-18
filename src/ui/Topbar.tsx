@@ -1,26 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Plus, Trash2, Check, AlertCircle, Target } from "lucide-react";
+import { X, Plus, Trash2, Check, Target } from "lucide-react";
 import { DEFAULT_KEYBINDS } from "../lib/defaultKeybinds";
 import type { DomainKeybinds, KeybindAction } from "../types/keybinds";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { useToast } from "./Toast";
 
 interface TopbarProps {
   isOpen: boolean;
@@ -28,14 +10,11 @@ interface TopbarProps {
 }
 
 export default function Topbar({ isOpen, onClose }: TopbarProps) {
+  const toast = useToast();
   const [currentDomain, setCurrentDomain] = useState<string>("");
   const [keybinds, setKeybinds] = useState<DomainKeybinds>({});
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isCreatingNew, setIsCreatingNew] = useState(false);
-  const [status, setStatus] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef<HTMLDivElement>(null);
@@ -48,6 +27,13 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
     "navigate",
   );
   const [actionValue, setActionValue] = useState("");
+
+  const showStatus = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
+    toast.toast(message, type);
+  };
 
   const loadKeybinds = async (domain: string) => {
     const storageKey = `keybinds_${domain}`;
@@ -70,10 +56,8 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+      if (searchRef.current && !searchRef.current.contains(target)) {
         setSearchOpen(false);
       }
     };
@@ -103,29 +87,19 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
         resizeObserver.disconnect();
       };
     }
-  }, [isOpen, selectedKey, isCreatingNew, status]);
+  }, [isOpen, selectedKey, isCreatingNew]);
 
-  const showStatus = (
-    message: string,
-    type: "success" | "error" = "success",
-  ) => {
-    setStatus({ message, type });
-    setTimeout(() => setStatus(null), 3000);
-  };
-
-  const selectKeybind = (key: string) => {
+  const selectKeybind = (key: string, binding: KeybindAction) => {
     setSelectedKey(key);
     setIsCreatingNew(false);
     setSearchOpen(false);
-    const binding = keybinds[key];
-
     setKeySequence(key);
     setDescription(binding.description);
 
-    if (binding.action === "navigate") {
+    if (binding.action === "navigate" && "url" in binding) {
       setActionType("navigate");
       setActionValue(binding.url);
-    } else if (binding.action === "click") {
+    } else if (binding.action === "click" && "selector" in binding) {
       setActionType("click");
       setActionValue(binding.selector);
     } else {
@@ -239,101 +213,107 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
   return (
     <div
       ref={topbarRef}
-      className="fixed top-0 left-0 right-0 w-full m-0 bg-background border-b shadow-lg z-2147483647"
+      className="wm-topbar"
+      style={{ background: "var(--background)" }}
     >
-      <div className="flex items-center justify-between px-6 py-3 bg-linear-to-r from-blue-600 to-purple-600">
-        <div className="flex items-center gap-4">
-          <h2 className="text-lg font-bold text-white">Browser Motion</h2>
-          <span className="text-sm text-blue-100">→</span>
-          <Badge
-            variant="secondary"
-            className="font-mono bg-white/20 text-white hover:bg-white/30"
+      <div
+        className="wm-topbar-header"
+        style={{
+          background: "linear-gradient(to right, #2563eb, #9333ea)",
+        }}
+      >
+        <div className="wm-topbar-header-row">
+          <h2 className="wm-topbar-title">Browser Motion</h2>
+          <span className="wm-topbar-arrow">→</span>
+          <span
+            className="badge secondary"
+            style={{
+              background: "rgb(255 255 255 / 0.2)",
+              color: "white",
+              fontFamily: "ui-monospace, monospace",
+            }}
           >
             {currentDomain}
-          </Badge>
-          <Badge
-            variant="secondary"
-            className="bg-white/20 text-white hover:bg-white/30"
+          </span>
+          <span
+            className="badge secondary"
+            style={{ background: "rgb(255 255 255 / 0.2)", color: "white" }}
           >
             {Object.keys(keybinds).length} keybinds
-          </Badge>
+          </span>
         </div>
-        <div className="flex gap-2 items-center justify-center">
-          {status && (
-            <div
-              className={cn(
-                "px-4 h-9 rounded-lg flex items-center gap-2 text-sm",
-                status.type === "success"
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-red-50 text-red-700 border border-red-200",
-              )}
-            >
-              {status.type === "success" ? (
-                <Check className="w-4 h-4" />
-              ) : (
-                <AlertCircle className="w-4 h-4" />
-              )}
-              <span className="text-sm">{status.message}</span>
-            </div>
-          )}
-          <Button
+        <div className="wm-topbar-badge-row">
+          <button
+            type="button"
             onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/20"
+            className="wm-topbar-btn wm-topbar-btn-ghost"
+            aria-label="Close"
           >
-            <X className="w-5 h-5" />
-          </Button>
+            <X size={20} />
+          </button>
         </div>
       </div>
-      <div className="flex gap-6 p-4">
-        <div className="w-64 flex flex-col gap-2">
-          <Button onClick={createNewKeybind} className="w-full">
-            <Plus className="w-4 h-4" />
+      <div className="wm-topbar-body">
+        <div className="wm-topbar-sidebar">
+          <button
+            type="button"
+            onClick={createNewKeybind}
+            className="wm-topbar-btn wm-topbar-btn-full"
+          >
+            <Plus size={16} />
             New Keybind
-          </Button>
-          <div className="relative" ref={searchRef}>
-            <Input
-              className="text-muted-foreground text-sm font-mono"
-              placeholder="Search by description or key..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setSearchOpen(true);
-              }}
-              onFocus={() => setSearchOpen(true)}
-            />
+          </button>
+          <div className="wm-topbar-search-wrap" ref={searchRef}>
+            <label data-field className="wm-topbar-search-field">
+              <input
+                type="text"
+                placeholder="Search by description or key..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                onFocus={() => setSearchOpen(true)}
+              />
+            </label>
             {searchOpen && filteredKeybinds.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 z-50">
-                <Command className="rounded-lg border shadow-md bg-popover">
-                  <CommandList>
-                    <CommandEmpty>No keybinds found.</CommandEmpty>
-                    <CommandGroup>
-                      {filteredKeybinds.map(([key, binding]) => (
-                        <CommandItem
-                          key={key}
-                          onSelect={() => selectKeybind(key)}
-                          className="cursor-pointer"
-                        >
-                          <div className="flex flex-col gap-1 flex-1">
-                            <div className="font-mono text-sm font-medium">
-                              {key}
-                            </div>
-                            <div className="text-xs text-muted-foreground truncate">
-                              {binding.description}
-                            </div>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </div>
+              <article className="card wm-topbar-dropdown">
+                <ul className="unstyled">
+                  {filteredKeybinds.map(([key, binding]) => (
+                    <li key={key}>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          selectKeybind(key, binding);
+                        }}
+                        className="wm-topbar-dropdown-item"
+                      >
+                        <div className="wm-topbar-dropdown-item-content">
+                          <span className="wm-topbar-dropdown-item-key">
+                            {key}
+                          </span>
+                          <span className="wm-topbar-dropdown-item-desc">
+                            {binding.description}
+                          </span>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+            {searchOpen && searchQuery && filteredKeybinds.length === 0 && (
+              <article className="card wm-topbar-dropdown wm-topbar-dropdown-empty">
+                No keybinds found.
+              </article>
             )}
           </div>
-          <div className="flex gap-2 w-full">
-            <Button
-              className="w-full"
+          <div className="wm-topbar-actions">
+            <button
+              type="button"
               onClick={saveCurrentKeybind}
               disabled={
                 !keySequence ||
@@ -341,83 +321,85 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
                 !actionValue ||
                 (!selectedKey && !isCreatingNew)
               }
+              className="wm-topbar-btn wm-topbar-btn-full"
             >
-              <Check className="w-4 h-4" />
+              <Check size={16} />
               {isCreatingNew ? "Add Keybind" : "Update Keybind"}
-            </Button>
+            </button>
 
             {selectedKey && !isCreatingNew && (
-              <Button onClick={deleteKeybind} variant="destructive" size="icon">
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <button
+                type="button"
+                onClick={deleteKeybind}
+                data-variant="danger"
+                className="wm-topbar-btn wm-topbar-btn-icon wm-topbar-danger"
+                aria-label="Delete keybind"
+              >
+                <Trash2 size={16} />
+              </button>
             )}
           </div>
         </div>
-        <div className="flex-1 flex flex-col gap-1 -mt-0.5">
+        <div className="wm-topbar-main">
           {isCreatingNew || selectedKey ? (
             <>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-primary" htmlFor="keySequence">
-                    Key Sequence
-                  </Label>
-                  <Input
-                    className="font-mono text-sm text-muted-foreground mt-1"
-                    id="keySequence"
+              <div className="wm-topbar-form-grid">
+                <label data-field>
+                  Key Sequence
+                  <input
                     type="text"
+                    id="keySequence"
                     value={keySequence}
                     onChange={(e) => setKeySequence(e.target.value)}
                     placeholder="e.g., gh, grp1"
+                    style={{
+                      fontFamily: "ui-monospace, monospace",
+                      fontSize: "0.875rem",
+                    }}
                   />
-                </div>
+                </label>
 
-                <div>
-                  <Label className="text-primary" htmlFor="description">
-                    Description
-                  </Label>
-                  <Input
-                    id="description"
+                <label data-field>
+                  Description
+                  <input
                     type="text"
+                    id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="e.g., Go to home"
-                    className="mt-1 text-muted-foreground font-mono"
+                    style={{ fontFamily: "ui-monospace, monospace" }}
                   />
-                </div>
+                </label>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-primary" htmlFor="actionType">
-                    Action Type
-                  </Label>
-                  <Select
+              <div className="wm-topbar-form-grid">
+                <div data-field>
+                  <label htmlFor="actionType">Action Type</label>
+                  <select
+                    id="actionType"
                     value={actionType}
-                    onValueChange={(value) =>
-                      setActionType(value as "navigate" | "click")
+                    onChange={(e) =>
+                      setActionType(e.target.value as "navigate" | "click")
                     }
+                    aria-label="Select action type"
                   >
-                    <SelectTrigger className="mt-1 text-muted-foreground text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="text-muted-foreground text-sm">
-                      <SelectItem value="navigate">Navigate to URL</SelectItem>
-                      <SelectItem value="click">
-                        Click Element (CSS Selector)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="navigate">Navigate to URL</option>
+                    <option value="click">Click Element (CSS Selector)</option>
+                  </select>
                 </div>
 
-                <div>
-                  <Label className="text-primary" htmlFor="actionValue">
+                <div data-field>
+                  <label htmlFor="actionValue">
                     {actionType === "navigate" && "URL"}
                     {actionType === "click" && "CSS Selector"}
-                  </Label>
-                  <div className="flex gap-2 mt-1">
-                    <Input
-                      id="actionValue"
+                  </label>
+                  <div className="wm-topbar-field-group">
+                    <input
+                      style={{
+                        marginTop: -1,
+                      }}
                       type="text"
+                      id="actionValue"
                       value={actionValue}
                       onChange={(e) => setActionValue(e.target.value)}
                       placeholder={
@@ -425,15 +407,13 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
                           ? "https://example.com"
                           : ".button-class or #button-id"
                       }
-                      className="font-mono text-sm flex-1 text-muted-foreground"
                       disabled={isPickingSelector}
                     />
                     {actionType === "click" && (
-                      <Button
+                      <button
                         type="button"
-                        className="text-primary"
-                        variant={isPickingSelector ? "destructive" : "outline"}
-                        size="icon"
+                        data-variant={isPickingSelector ? "danger" : undefined}
+                        className={`wm-topbar-btn wm-topbar-btn-icon ${!isPickingSelector ? "outline" : ""}`}
                         onClick={
                           isPickingSelector
                             ? stopSelectorPicker
@@ -444,13 +424,18 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
                             ? "Cancel selector picker"
                             : "Pick element from page"
                         }
+                        aria-label={
+                          isPickingSelector
+                            ? "Cancel selector picker"
+                            : "Pick element from page"
+                        }
                       >
-                        <Target className="w-4 h-4" />
-                      </Button>
+                        <Target size={16} />
+                      </button>
                     )}
                   </div>
                   {isPickingSelector && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="wm-topbar-hint">
                       Hover over elements on the page and click to select
                     </p>
                   )}
@@ -458,7 +443,7 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
+            <div className="wm-topbar-placeholder wm-topbar-text-muted">
               Select a keybind to edit or create a new one
             </div>
           )}

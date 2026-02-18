@@ -1,5 +1,6 @@
-import Topbar from './Topbar';
-import { SelectorPicker } from './SelectorPicker';
+import Topbar from "./Topbar";
+import { SelectorPicker } from "./SelectorPicker";
+import { ToastProvider } from "./Toast";
 
 interface AppProps {
   isOpen: boolean;
@@ -8,9 +9,9 @@ interface AppProps {
 
 export default function App({ isOpen, onClose }: AppProps) {
   return (
-    <>
+    <ToastProvider>
       <Topbar isOpen={isOpen} onClose={onClose} />
       <SelectorPicker />
-    </>
+    </ToastProvider>
   );
 }

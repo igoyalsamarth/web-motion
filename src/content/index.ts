@@ -1,6 +1,9 @@
+// Polyfill for customElements - required in Chrome extension content scripts
+// (customElements can be null in production builds without this)
+import "@webcomponents/custom-elements";
+
 import type { DomainKeybinds, KeybindAction } from "../types/keybinds";
 import { initTopbar } from "../ui/index";
-import "../ui/styles.css";
 
 let keySequence = "";
 let lastKeyTime = 0;
@@ -64,7 +67,23 @@ window.addEventListener("browser-motion-reload-keybinds", () => {
 });
 
 void loadKeybinds();
-initTopbar();
+
+function initWhenReady(): void {
+  if (document.body) {
+    try {
+      initTopbar();
+    } catch (err) {
+      console.error("Browser Motion: Failed to init topbar", err);
+    }
+    return;
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initWhenReady, { once: true });
+  } else {
+    requestAnimationFrame(initWhenReady);
+  }
+}
+initWhenReady();
 
 function executeAction(binding: KeybindAction): void {
   switch (binding.action) {

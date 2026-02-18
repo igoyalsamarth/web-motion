@@ -11,3 +11,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_TOPBAR" });
   }
 });
+
+chrome.action.onClicked.addListener((tab) => {
+  if (tab?.id) {
+    chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_TOPBAR" });
+  }
+});
