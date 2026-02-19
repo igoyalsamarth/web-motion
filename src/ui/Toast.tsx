@@ -1,12 +1,6 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { ToastContext } from "./ToastContext";
 
 interface Toast {
   id: number;
@@ -14,23 +8,7 @@ interface Toast {
   variant: "success" | "error";
 }
 
-interface ToastContextValue {
-  toast: (message: string, type?: "success" | "error") => void;
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null);
-
-export function useToast(): ToastContextValue {
-  const ctx = useContext(ToastContext);
-  if (!ctx) {
-    return {
-      toast: (msg) => console.log("[Browser Motion]", msg),
-    };
-  }
-  return ctx;
-}
-
-const TOAST_DURATION = 4000;
+const TOAST_DURATION = 3000;
 
 function ToastItem({
   id,

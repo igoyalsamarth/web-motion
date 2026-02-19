@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, Plus, Trash2, Check, Target } from "lucide-react";
 import { DEFAULT_KEYBINDS } from "../lib/defaultKeybinds";
 import type { DomainKeybinds, KeybindAction } from "../types/keybinds";
-import { useToast } from "./Toast";
+import { useToast } from "./useToast";
 
 interface TopbarProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface TopbarProps {
 
 export default function Topbar({ isOpen, onClose }: TopbarProps) {
   const toast = useToast();
-  const [currentDomain, setCurrentDomain] = useState<string>("");
+  const currentDomain = isOpen ? window.location.hostname : "";
   const [keybinds, setKeybinds] = useState<DomainKeybinds>({});
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -60,10 +60,16 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
   };
 
   useEffect(() => {
-    const hostname = window.location.hostname;
-    setCurrentDomain(hostname);
-    void loadKeybinds(hostname);
+    void Promise.resolve().then(() =>
+      loadKeybinds(window.location.hostname),
+    );
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const hostname = window.location.hostname;
+    void Promise.resolve().then(() => loadKeybinds(hostname));
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -141,5 +141,9 @@ export const initTopbar = () => {
     }
   });
 
-  (window as any).__browserMotionToggleTopbar = toggleTopbar;
+  (
+    window as Window & {
+      __browserMotionToggleTopbar?: () => void;
+    }
+  ).__browserMotionToggleTopbar = toggleTopbar;
 };
