@@ -7,11 +7,7 @@ export function SelectorPicker() {
     null,
   );
   const overlayRef = useRef<HTMLDivElement | null>(null);
-  const [portalContainer] = useState(() => {
-    const container = document.createElement("div");
-    container.id = "browser-motion-selector-picker";
-    return container;
-  });
+  const [portalContainer] = useState(() => document.createElement("div"));
 
   useEffect(() => {
     document.body.appendChild(portalContainer);
@@ -21,10 +17,6 @@ export function SelectorPicker() {
   }, [portalContainer]);
 
   const generateSelector = (element: HTMLElement): string => {
-    const escapeSelector = (str: string): string => {
-      return str.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, "\\$&");
-    };
-
     const isValidSelector = (selector: string): boolean => {
       try {
         document.querySelector(selector);
@@ -34,38 +26,10 @@ export function SelectorPicker() {
       }
     };
 
-    if (element.id) {
-      const idSelector = `#${escapeSelector(element.id)}`;
-      if (isValidSelector(idSelector)) {
-        return idSelector;
-      }
-    }
-
-    if (element.className && typeof element.className === "string") {
-      const classes = element.className
-        .trim()
-        .split(/\s+/)
-        .filter((c) => c && /^[a-zA-Z_-][a-zA-Z0-9_-]*$/.test(c)); // Only valid CSS class names
-
-      if (classes.length > 0) {
-        const classSelector = `.${classes.join(".")}`;
-        if (isValidSelector(classSelector)) {
-          try {
-            const matches = document.querySelectorAll(classSelector);
-            if (matches.length === 1) {
-              return classSelector;
-            }
-          } catch {
-            // Invalid selector, continue
-          }
-        }
-      }
-    }
-
     const path: string[] = [];
     let current: HTMLElement | null = element;
     let depth = 0;
-    const maxDepth = 10;
+    const maxDepth = 15;
 
     while (current && current !== document.body && depth < maxDepth) {
       let selector = current.tagName.toLowerCase();
@@ -81,15 +45,6 @@ export function SelectorPicker() {
       }
 
       path.unshift(selector);
-
-      if (current.id) {
-        const idSelector = `#${escapeSelector(current.id)}`;
-        if (isValidSelector(idSelector)) {
-          path[0] = idSelector;
-          break;
-        }
-      }
-
       current = current.parentElement;
       depth++;
     }
@@ -100,33 +55,38 @@ export function SelectorPicker() {
       return finalSelector;
     }
 
-    const fallback = `${element.tagName.toLowerCase()}:nth-of-type(1)`;
-    return fallback;
+    return `${element.tagName.toLowerCase()}:nth-of-type(1)`;
+  };
+
+  const getTopbarRoot = (): HTMLElement | null => {
+    return (
+      Array.from(document.body.children).find(
+        (el): el is HTMLElement =>
+          el instanceof HTMLElement && el.shadowRoot != null,
+      ) ?? null
+    );
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
 
-    const topbarRoot = document.getElementById("browser-motion-topbar-root");
+    const topbarRoot = getTopbarRoot();
     if (topbarRoot?.contains(target)) {
       setHoveredElement(null);
       return;
     }
 
-    const pickerContainer = document.getElementById(
-      "browser-motion-selector-picker",
-    );
-    if (pickerContainer?.contains(target)) {
+    if (portalContainer.contains(target)) {
       return;
     }
 
     setHoveredElement(target);
-  }, []);
+  }, [portalContainer]);
 
   const handleClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
 
-    const topbarRoot = document.getElementById("browser-motion-topbar-root");
+    const topbarRoot = getTopbarRoot();
     if (topbarRoot?.contains(target)) {
       return;
     }
@@ -218,7 +178,6 @@ export function SelectorPicker() {
 
       <div
         ref={overlayRef}
-        id="browser-motion-highlight-overlay"
         style={{
           position: "absolute",
           pointerEvents: "none",

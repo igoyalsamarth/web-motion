@@ -15,6 +15,18 @@ function stopKeyEventPropagation(host: HTMLElement): void {
   }
 }
 
+function stopWheelPropagation(host: HTMLElement): void {
+  host.addEventListener(
+    "wheel",
+    (e) => {
+      if (host.contains(e.target as Node)) {
+        e.stopPropagation();
+      }
+    },
+    { passive: true },
+  );
+}
+
 const createTopbarContainer = (): {
   host: HTMLDivElement;
   shadowRoot: ShadowRoot;
@@ -36,6 +48,7 @@ const createTopbarContainer = (): {
   host.id = "browser-motion-topbar-root";
 
   stopKeyEventPropagation(host);
+  stopWheelPropagation(host);
 
   const shadowRoot = host.attachShadow({ mode: "open" });
 

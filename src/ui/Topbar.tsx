@@ -35,23 +35,34 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
     toast.toast(message, type);
   };
 
-  const loadKeybinds = async (domain: string) => {
-    const storageKey = `keybinds_${domain}`;
+  const loadKeybinds = async (hostname: string) => {
+    const storageKey = `keybinds_${hostname}`;
     const result = await chrome.storage.sync.get([storageKey]);
 
     if (result[storageKey]) {
       setKeybinds(result[storageKey] as DomainKeybinds);
-    } else if (DEFAULT_KEYBINDS[domain]) {
-      setKeybinds(DEFAULT_KEYBINDS[domain]);
+      return;
+    }
+
+    const matchingDefaults = Object.entries(DEFAULT_KEYBINDS)
+      .filter(
+        ([domainKey]) =>
+          hostname === domainKey ||
+          hostname.endsWith(`.${domainKey}`) ||
+          hostname.includes(domainKey),
+      )
+      .sort(([a], [b]) => b.length - a.length)[0];
+    if (matchingDefaults) {
+      setKeybinds(matchingDefaults[1]);
     } else {
       setKeybinds({} as DomainKeybinds);
     }
   };
 
   useEffect(() => {
-    const domain = window.location.hostname;
-    setCurrentDomain(domain);
-    void loadKeybinds(domain);
+    const hostname = window.location.hostname;
+    setCurrentDomain(hostname);
+    void loadKeybinds(hostname);
   }, []);
 
   useEffect(() => {
@@ -259,6 +270,9 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
             type="button"
             onClick={createNewKeybind}
             className="wm-topbar-btn wm-topbar-btn-full"
+            style={{
+              color: "white",
+            }}
           >
             <Plus size={16} />
             New Keybind
@@ -278,31 +292,33 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
             </label>
             {searchOpen && filteredKeybinds.length > 0 && (
               <article className="card wm-topbar-dropdown">
-                <ul className="unstyled">
-                  {filteredKeybinds.map(([key, binding]) => (
-                    <li key={key}>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          selectKeybind(key, binding);
-                        }}
-                        className="wm-topbar-dropdown-item"
-                      >
-                        <div className="wm-topbar-dropdown-item-content">
-                          <span className="wm-topbar-dropdown-item-key">
-                            {key}
-                          </span>
-                          <span className="wm-topbar-dropdown-item-desc">
-                            {binding.description}
-                          </span>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                <div className="wm-topbar-dropdown-scroll">
+                  <ul className="unstyled">
+                    {filteredKeybinds.map(([key, binding]) => (
+                      <li key={key}>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            selectKeybind(key, binding);
+                          }}
+                          className="wm-topbar-dropdown-item"
+                        >
+                          <div className="wm-topbar-dropdown-item-content">
+                            <span className="wm-topbar-dropdown-item-key">
+                              {key}
+                            </span>
+                            <span className="wm-topbar-dropdown-item-desc">
+                              {binding.description}
+                            </span>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </article>
             )}
             {searchOpen && searchQuery && filteredKeybinds.length === 0 && (
@@ -322,6 +338,9 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
                 (!selectedKey && !isCreatingNew)
               }
               className="wm-topbar-btn wm-topbar-btn-full"
+              style={{
+                color: "white",
+              }}
             >
               <Check size={16} />
               {isCreatingNew ? "Add Keybind" : "Update Keybind"}

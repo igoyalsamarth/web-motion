@@ -155,8 +155,15 @@
   right: 0;
   margin-top: var(--space-1, 0.25rem);
   z-index: 50;
+}
+
+:host .wm-topbar-dropdown-scroll {
   max-height: 15rem;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 :host .wm-topbar-dropdown-empty {
@@ -355,6 +362,7 @@
 
 :host .card.wm-topbar-dropdown {
   padding: var(--space-1, 0.25rem);
+  overflow: visible;
 }
 
 :host .badge.secondary {
