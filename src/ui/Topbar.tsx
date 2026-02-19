@@ -60,9 +60,7 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
   };
 
   useEffect(() => {
-    void Promise.resolve().then(() =>
-      loadKeybinds(window.location.hostname),
-    );
+    void Promise.resolve().then(() => loadKeybinds(window.location.hostname));
   }, []);
 
   useEffect(() => {
@@ -240,6 +238,12 @@ export default function Topbar({ isOpen, onClose }: TopbarProps) {
         }}
       >
         <div className="wm-topbar-header-row">
+          <img
+            src={chrome.runtime.getURL("icon128.png")}
+            alt="Browser Motion Logo"
+            width={48}
+            height={48}
+          />
           <h2 className="wm-topbar-title">Browser Motion</h2>
           <span className="wm-topbar-arrow">→</span>
           <span

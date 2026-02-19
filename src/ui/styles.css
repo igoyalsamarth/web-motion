@@ -349,7 +349,6 @@
   color: rgb(191 219 254);
 }
 
-/* Oat replacements - card, badge, unstyled, outline (scoped to shadow DOM) */
 :host .card {
   background-color: var(--card);
   color: var(--foreground);
@@ -390,7 +389,6 @@
   background-color: var(--accent);
 }
 
-/* Toast - renders inside shadow root */
 :host .wm-toast-container {
   position: fixed;
   top: var(--space-4);
